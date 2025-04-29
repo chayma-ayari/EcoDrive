@@ -1,0 +1,160 @@
+<?php
+require_once '../../config.php';
+require_once '../../model/colis.php';
+
+$message = '';
+$error = '';
+$qrDataUri = '';
+
+if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
+    require_once __DIR__ . '/../../vendor/autoload.php'; // For QR code generation
+    // Import classes after including autoload
+    class_alias('Endroid\QrCode\Builder\Builder', 'Builder');
+    class_alias('Endroid\QrCode\Writer\PngWriter', 'PngWriter');
+} else {
+    // Fallback or error handling if autoload.php is not found
+    $message = "";
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  try {
+    $db = config::getConnexion();
+
+    // Validate colis form inputs
+    $id_colis = $_POST['id_colis'] ?? '';
+    $poids = $_POST['poids'] ?? '';
+    $contenu = $_POST['contenu'] ?? '';
+    $statut = $_POST['statut'] ?? '';
+    $date_envoi = $_POST['date_envoi'] ?? '';
+    $date_livraison = $_POST['date_livraison'] ?? '';
+
+    if (empty($id_colis) || empty($poids) || empty($contenu) || empty($statut) || empty($date_envoi) || empty($date_livraison)) {
+      $error = "All colis fields are required.";
+    } elseif (!is_numeric($poids) || $poids <= 0) {
+      $error = "Weight must be a positive number.";
+    } elseif (!strtotime($date_envoi) || !strtotime($date_livraison)) {
+      $error = "Invalid date format for send date or delivery date.";
+    } else {
+      // Create new Colis object with colis form data
+      $colis = new Colis(
+        $id_colis,
+        $poids,
+        $contenu,
+        $statut,
+        $date_envoi,
+        $date_livraison
+      );
+
+      // Create the record using CRUD operation
+      if ($colis->create($db)) {
+        $message = "Colis added successfully!";
+        $data = "Type: colis, ID: $id_colis";
+        $qrResult = Builder::create()
+          ->writer(new PngWriter())
+          ->data($data)
+          ->size(300)
+          ->margin(10)
+          ->build();
+        $qrDataUri = $qrResult->getDataUri();
+
+        // Save QR code image to file
+        $qrImagePath = __DIR__ . '/QR_code.png';
+        $qrResult->saveToFile($qrImagePath);
+      } else {
+        $error = "Error adding colis";
+      }
+    }
+  } catch (Exception $e) {
+    $error = "Error: " . $e->getMessage();
+  }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Colis Form</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+    rel="stylesheet" />
+  <style>
+    body {
+      background-color: #e8f5e9;
+    }
+
+    .container {
+      background-color: #4caf50;
+      padding: 20px;
+      border-radius: 10px;
+      color: white;
+      max-width: 500px;
+      margin-top: 50px;
+    }
+
+    .btn-success {
+      background-color: #2e7d32;
+      border: none;
+    }
+
+    .btn-success:hover {
+      background-color: #1b5e20;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2 class="text-center">Colis Form</h2>
+
+    <?php if ($message): ?>
+      <div class="alert alert-success text-center font-weight-bold" role="alert" style="font-size: 1.2em;">
+        <?php echo $message; ?>
+      </div>
+    <?php endif; ?>
+    <?php if ($error): ?>
+      <div class="alert alert-danger text-center font-weight-bold" role="alert" style="font-size: 1.2em;">
+        <?php echo $error; ?>
+      </div>
+    <?php endif; ?>
+
+    <form method="POST" action="">
+      <div class="form-group">
+        <label for="id_colis">Colis ID</label>
+        <input type="text" class="form-control" id="id_colis" name="id_colis" required autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="poids">Weight (kg)</label>
+        <input type="number" step="0.01" class="form-control" id="poids" name="poids" required min="0" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="contenu">Content Description</label>
+        <input type="text" class="form-control" id="contenu" name="contenu" required autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="statut">Status</label>
+        <input type="text" class="form-control" id="statut" name="statut" required autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="date_envoi">Send Date</label>
+        <input type="date" class="form-control" id="date_envoi" name="date_envoi" required />
+      </div>
+
+      <div class="form-group">
+        <label for="date_livraison">Delivery Date</label>
+        <input type="date" class="form-control" id="date_livraison" name="date_livraison" required />
+      </div>
+
+      <button type="submit" class="btn btn-success btn-block">Submit Colis</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
