@@ -3,8 +3,10 @@
 // ========== EVENT ==========
 include('../../controller/eventC.php');
 $eventC = new eventC();
-
-  $events = $eventC->read();
+$events = $eventC->read();
+// ========== ACTIVITE ==========
+include('../../controller/activiteC.php');
+$ActiviteC = new ActiviteC();
 
 
 ?>
@@ -123,31 +125,42 @@ https://templatemo.com/tm-545-finance-business
               <h2>Nos dernier <em>evenements</em></h2>
             </div>
           </div>
-          <?php
-// Assuming $events is an array of event objects or associative arrays
-foreach ($events as $event):
-?>
-
-<div class="col-md-4">
-  <div class="team-item">
-    <div class="down-content">
-      <!-- Display the event name -->
-      <h4><?php echo $event['name']; ?></h4>
-      
-      <!-- Display the event date and time with a calendar icon -->
-      <span><i class="fas fa-calendar-alt"></i> <?php echo $event['date']; ?> <?php echo $event['time']; ?></span>
-      
-      <!-- Display the event description -->
-      <p><?php echo $event['description']; ?></p>
-      
-      <!-- Display the event location -->
-      <span><i class="fas fa-map-marker-alt"></i> <?php echo $event['location']; ?></span>
+          <?php foreach ($events as $event): 
+            $as = $ActiviteC->read($event['id']);
+            $liste = '';
+            // Check if $as is null or empty
+            if (empty($as)) {
+              $liste = "encore pas d'activite";
+            } else {
+              $liste = '';
+              foreach ($as as $a) {
+                $liste .= '- ' . $a['name'] . "\n";
+              }
+            }
+            $event_id = $event['id'];
+            $escaped_liste = htmlspecialchars($liste, ENT_QUOTES); // for data attribute
+          ?>
+  <div class="col-md-4">
+    <div class="team-item">
+      <div class="down-content">
+        <h4><?php echo htmlspecialchars($event['name']); ?></h4>
+        <span><i class="fas fa-calendar-alt"></i> <?php echo htmlspecialchars($event['date'] . ' ' . $event['time']); ?></span>
+        <p><?php echo htmlspecialchars($event['description']); ?></p>
+        <span><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($event['location']); ?></span>
+        <p>Scanner pour consulter les activite</p>
+        <!-- QR Code container with encoded activity list -->
+        <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=<?=$liste?>">      </div>
     </div>
   </div>
-</div>
-
 <?php endforeach; ?>
-
+<script>
+  document.querySelectorAll(".qr-container").forEach(container => {
+    const qrData = container.dataset.qrtext;
+    const encodedData = encodeURIComponent(qrData);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodedData}`;
+    container.innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
+  });
+</script>
 
         </div>
       </div>
@@ -240,7 +253,7 @@ foreach ($events as $event):
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
+    
     <!-- Additional Scripts -->
     <script src="assets/js/custom.js"></script>
     <script src="assets/js/owl.js"></script>
