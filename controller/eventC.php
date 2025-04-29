@@ -4,6 +4,7 @@ include 'C:/xampp/htdocs/projet/model/event.php';
 
 class EventC
 {
+    // ajouter + mailing
     public function create($event)
     {
         $sql = "INSERT INTO `event`(`name`, `description`, `capacity`, `location`, `date`, `time`) 
@@ -19,12 +20,47 @@ class EventC
                 'date' => $event->getDate(),
                 'time' => $event->getTime(),
             ]);
+            $to_email = "ehamdi414@gmail.com";
+            $subject = "📅 Nouveau Événement Créé";
+
+            // HTML body
+            $body = '
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="UTF-8">
+            </head>
+            <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+            <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);">
+                <h2 style="color:#2b7a78;">🎉 Un Nouvel Événement a été Créé !</h2>
+                <p>Bonjour,</p>
+                <p>Nous sommes ravis de vous informer qu&apos;un nouvel événement a été ajouté à notre plateforme.</p>
+                <p>Ne manquez pas l&apos;occasion de participer et de vivre une expérience unique !</p>
+                <a href="http://localhost/projet/view/front/event.php" style="display:inline-block;margin-top:20px;padding:10px 20px;background-color:#3aafa9;color:#fff;text-decoration:none;border-radius:5px;">Voir l&apos;événement</a>
+                <p style="margin-top:30px;font-size:12px;color:#888;">Cet e-mail a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            </div>
+            </body>
+            </html>
+            ';
+
+            // Proper headers
+            $headers = "MIME-Version: 1.0\r\n";
+            $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+            $headers .= "From: Evenements <evenements@yourdomain.com>\r\n";
+
+            // Send mail
+            if (mail($to_email, $subject, $body, $headers)) {
+                echo "Email envoyé avec succès.";
+            } else {
+                echo "Échec de l'envoi de l'email.";
+            }
             header('Location:events.php');
         } catch (Exception $e) {
             echo 'Erreur: ' . $e->getMessage();
         }
     }
 
+    // afficher
     public function read()
     {
         $sql = "SELECT * FROM event";
@@ -36,6 +72,7 @@ class EventC
         }
     }
 
+    // chercher
     public function search($r)
     {
         $sql = "SELECT * FROM event 
@@ -51,6 +88,7 @@ class EventC
         }
     }
 
+    // trie
     public function sort($column)
     {
         $sql = "SELECT * FROM event ORDER BY $column";
@@ -62,6 +100,7 @@ class EventC
         }
     }
 
+    // trouver un seul event avec son id 
     public function findOne($id)
     {
         $sql = "SELECT * FROM event WHERE id = '$id'";
@@ -74,6 +113,7 @@ class EventC
         }
     }
 
+    // supprimer
     public function delete()
     {
         if (isset($_GET['deleteevent'])) {
@@ -90,6 +130,7 @@ class EventC
         }
     }
 
+    // modifier
     public function update($event, $id)
     {
         $sql = "UPDATE `event` 
