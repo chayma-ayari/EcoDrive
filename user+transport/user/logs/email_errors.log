@@ -1,0 +1,6 @@
+[2025-05-06 01:37:12] Erreur BDD principale: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'projetweb.users' doesn't exist
+[2025-05-06 01:37:15] Erreur BDD principale: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'projetweb.users' doesn't exist
+[2025-05-06 01:37:16] Erreur BDD principale: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'projetweb.users' doesn't exist
+[2025-05-06 01:37:16] Erreur BDD principale: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'projetweb.users' doesn't exist
+[2025-05-06 01:37:16] Erreur BDD principale: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'projetweb.users' doesn't exist
+[2025-05-06 01:39:33] Erreur BDD : SQLSTATE[42S02]: Base table or view not found: 1146 Table 'projetweb.users' doesn't exist
